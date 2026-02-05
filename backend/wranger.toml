@@ -1,3 +1,3 @@
-name = "ai_chat"
+name = "ai chat"
 main = "src/index.ts"
 compatibility_date = "2026_02_05"
