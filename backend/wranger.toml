@@ -1,0 +1,3 @@
+name = "ai_chat"
+main = "src/index.ts"
+compatibility_date = "2026_02_05"
