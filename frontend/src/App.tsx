@@ -1,9 +1,15 @@
 import { Thread } from "./components/thread";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { MyRuntimeProvider } from "./MyRuntimeProvider";
 
 export default function App() {
   return (
-    <div className="min-h-screen">
-      <Thread />
-    </div>
+    <MyRuntimeProvider>
+      <TooltipProvider>
+        <div className="h-screen">
+          <Thread />
+        </div>
+      </TooltipProvider>
+    </MyRuntimeProvider>
   );
 }
