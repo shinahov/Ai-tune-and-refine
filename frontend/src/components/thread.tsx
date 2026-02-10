@@ -34,7 +34,7 @@ import {
   Settings2,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import type { FC } from "react";
+import { useState, type FC } from "react";
 
 export const Thread: FC = () => {
   return (
@@ -133,6 +133,47 @@ const ThreadSuggestionItem: FC = () => {
   );
 };
 
+export const SettingsMenu = () => {
+  const [value, setValue] = useState(3)
+  return (<DropdownMenu.Root>
+    <DropdownMenu.Trigger asChild>
+      <button
+        type="button"
+        className="inline-flex items-center justify-center rounded-md p-2 hover:bg-accent"
+        aria-label="Open settings"
+      >
+        <Settings2 size={16} strokeWidth={1.25} />
+      </button>
+    </DropdownMenu.Trigger>
+
+    <DropdownMenu.Portal>
+      <DropdownMenu.Content
+        side="top"
+        align="start"
+        className="rounded-md border bg-background p-2 shadow-md"
+      >
+        <div className="flex flex-col gap-2">
+          <div className="text-xs text-muted-foreground">Value: {value}</div>
+
+          <input
+            type="range"
+            min={1}
+            max={5}
+            step={1}
+            value={value}
+            onChange={(e) => setValue(Number(e.target.value))}
+            className="w-40"
+          />
+
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>1</span><span>5</span>
+          </div>
+        </div>
+      </DropdownMenu.Content>
+    </DropdownMenu.Portal>
+  </DropdownMenu.Root>);
+};
+
 const Composer: FC = () => {
   return (
     <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
@@ -156,31 +197,7 @@ const ComposerAction: FC = () => {
     <div className="aui-composer-action-wrapper relative mx-2 mb-2 flex items-center justify-between">
       <div className="flex items-center gap-2">
         <ComposerAddAttachment />
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-md p-2 hover:bg-accent"
-              aria-label="Open settings"
-            >
-              <Settings2 size={16} strokeWidth={1.25} />
-            </button>
-          </DropdownMenu.Trigger>
-
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content
-              side="top"
-              align="start"
-              className="rounded-md border bg-background p-2 shadow-md"
-            >
-              <div className="flex flex-col gap-2">
-                <Settings2 size={16} strokeWidth={1.25} />
-                <Settings2 size={16} strokeWidth={1.25} />
-                <Settings2 size={16} strokeWidth={1.25} />
-              </div>
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
+        <SettingsMenu />
       </div>
       <AuiIf condition={({ thread }) => !thread.isRunning}>
         <ComposerPrimitive.Send asChild>
