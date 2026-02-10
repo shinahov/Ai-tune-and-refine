@@ -31,13 +31,15 @@ import {
   PencilIcon,
   RefreshCwIcon,
   SquareIcon,
+  Settings2,
 } from "lucide-react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import type { FC } from "react";
 
 export const Thread: FC = () => {
   return (
     <ThreadPrimitive.Root
-      className="aui-root aui-thread-root @container flex h-screen flex-col bg-background"
+      className="aui-root aui-thread-root @container flex min-h-screen flex-col bg-background"
       style={{
         ["--thread-max-width" as string]: "44rem",
       }}
@@ -152,7 +154,34 @@ const Composer: FC = () => {
 const ComposerAction: FC = () => {
   return (
     <div className="aui-composer-action-wrapper relative mx-2 mb-2 flex items-center justify-between">
-      <ComposerAddAttachment />
+      <div className="flex items-center gap-2">
+        <ComposerAddAttachment />
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-md p-2 hover:bg-accent"
+              aria-label="Open settings"
+            >
+              <Settings2 size={16} strokeWidth={1.25} />
+            </button>
+          </DropdownMenu.Trigger>
+
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content
+              side="top"
+              align="start"
+              className="rounded-md border bg-background p-2 shadow-md"
+            >
+              <div className="flex flex-col gap-2">
+                <Settings2 size={16} strokeWidth={1.25} />
+                <Settings2 size={16} strokeWidth={1.25} />
+                <Settings2 size={16} strokeWidth={1.25} />
+              </div>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+      </div>
       <AuiIf condition={({ thread }) => !thread.isRunning}>
         <ComposerPrimitive.Send asChild>
           <TooltipIconButton
