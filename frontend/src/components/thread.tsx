@@ -32,8 +32,14 @@ import {
   RefreshCwIcon,
   SquareIcon,
   Settings2,
+  AlignLeft,
+  Minus,
+  Menu,
+  FileText,
+  BookText,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import * as Slider from "@radix-ui/react-slider";
 import { useState, type FC } from "react";
 
 export const Thread: FC = () => {
@@ -135,6 +141,7 @@ const ThreadSuggestionItem: FC = () => {
 
 export const SettingsMenu = () => {
   const [value, setValue] = useState(3)
+  const icons = [Minus, AlignLeft, Menu, FileText, BookText];
   return (<DropdownMenu.Root>
     <DropdownMenu.Trigger asChild>
       <button
@@ -150,24 +157,38 @@ export const SettingsMenu = () => {
       <DropdownMenu.Content
         side="top"
         align="start"
-        className="rounded-md border bg-background p-2 shadow-md"
+        className="rounded-md border-0 bg-white p-2 shadow-none"
       >
         <div className="flex flex-col gap-2">
-          <div className="text-xs text-muted-foreground">Value: {value}</div>
-
-          <input
-            type="range"
+          <div className="flex justify-between text-muted-foreground">
+            {icons.map((Icon, i) => {
+              const v = i + 1;
+              return (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setValue(v)}
+                  className="p-1"
+                  aria-label={`Set value ${v}`}
+                >
+                  <Icon className={cn("size-4", value === v && "text-blue-600")} />
+                </button>
+              );
+            })}
+          </div>
+          <Slider.Root
+            value={[value]}
+            onValueChange={([v]: number[]) => setValue(v)}
             min={1}
             max={5}
             step={1}
-            value={value}
-            onChange={(e) => setValue(Number(e.target.value))}
-            className="w-40"
-          />
-
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>1</span><span>5</span>
-          </div>
+            className="relative flex w-40 items-center"
+          >
+            <Slider.Track className="relative h-1 w-full rounded-full bg-muted">
+              <Slider.Range className="absolute h-full rounded-full bg-blue-600" />
+            </Slider.Track>
+            <Slider.Thumb className="block size-4 rounded-full bg-blue-600 ring-2 ring-background" />
+          </Slider.Root>
         </div>
       </DropdownMenu.Content>
     </DropdownMenu.Portal>
