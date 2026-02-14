@@ -6,12 +6,16 @@ import {
 } from "@assistant-ui/react";
 
 const WORKER_URL = "https://ai-chat.ibshi100.workers.dev";
-const GEMMA_3_27B = "gemma-3-27b-it";
-const GEMINI_2_5_PRO = "gemini-2.5-pro"
-const GEMINI_2_FLASH = "gemini-2.0-flash"
-const GEMINI_2_5_FLASH = "gemini-2.5-flash"
-const GEMINI_2_5_FLASH_LIGHT = "gemini-2.5-flash-lite" // all higher models have a limit, cant use right now
-const MODEL = GEMMA_3_27B;
+const MODELS = {
+  GEMMA_3_27B: "gemma-3-27b-it",
+  GEMINI_2_5_PRO: "gemini-2.5-pro",
+  GEMINI_2_FLASH: "gemini-2.0-flash",
+  GEMINI_2_5_FLASH: "gemini-2.5-flash",
+  GEMINI_2_5_FLASH_LIGHT: "gemini-2.5-flash-lite",
+} as const;
+
+const MODEL = MODELS.GEMMA_3_27B;
+
 
 
 
