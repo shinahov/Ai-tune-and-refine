@@ -8,6 +8,7 @@ import { ToolFallback } from "@/components/tool-fallback";
 import { TooltipIconButton } from "@/components/tooltip-icon-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useGenerationSettings, type LengthLevel } from "@/MyRuntimeProvider";
 import {
   ActionBarMorePrimitive,
   ActionBarPrimitive,
@@ -40,7 +41,7 @@ import {
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Slider from "@radix-ui/react-slider";
-import { useState, type FC } from "react";
+import { type FC } from "react";
 
 export const Thread: FC = () => {
   return (
@@ -140,8 +141,14 @@ const ThreadSuggestionItem: FC = () => {
 };
 
 export const SettingsMenu = () => {
-  const [value, setValue] = useState(3)
+  const { outputLengthLevel, setOutputLengthLevel } = useGenerationSettings();
   const icons = [Minus, AlignLeft, Menu, FileText, BookText];
+
+  const setLevel = (value: number) => {
+    const clamped = Math.max(1, Math.min(5, Math.round(value))) as LengthLevel;
+    setOutputLengthLevel(clamped);
+  };
+
   return (<DropdownMenu.Root>
     <DropdownMenu.Trigger asChild>
       <button
@@ -167,18 +174,18 @@ export const SettingsMenu = () => {
                 <button
                   key={v}
                   type="button"
-                  onClick={() => setValue(v)}
+                  onClick={() => setLevel(v)}
                   className="p-1"
                   aria-label={`Set value ${v}`}
                 >
-                  <Icon className={cn("size-4", value === v && "text-blue-600")} />
+                  <Icon className={cn("size-4", outputLengthLevel === v && "text-blue-600")} />
                 </button>
               );
             })}
           </div>
           <Slider.Root
-            value={[value]}
-            onValueChange={([v]: number[]) => setValue(v)}
+            value={[outputLengthLevel]}
+            onValueChange={([v]: number[]) => setLevel(v)}
             min={1}
             max={5}
             step={1}

@@ -1,4 +1,6 @@
 type Env = { GEMINI_API_KEY: string };
+const DEFAULT_MODEL = "gemma-3-27b-it";
+const GEMMA_3_27B_OUTPUT_LIMIT = 8192;
 
 const CORS_HEADERS: Record<string, string> = {
   "access-control-allow-origin": "*",
@@ -18,7 +20,7 @@ function getGenerationConfig(body: any) {
 
   const maxRaw = body?.maxOutputTokens ?? reqGen?.maxOutputTokens;
   const maxOutputTokens =
-    Math.max(1, Math.min(2048, Number(maxRaw ?? 2048) || 2048));
+    Math.max(1, Math.min(GEMMA_3_27B_OUTPUT_LIMIT, Number(maxRaw ?? 256) || 256));
 
   const cfg: Record<string, any> = { maxOutputTokens };
 
@@ -27,9 +29,9 @@ function getGenerationConfig(body: any) {
   const topK = reqGen?.topK;
   const stopSequences = reqGen?.stopSequences;
 
-  if (typeof temperature === "number") cfg.temperature = temperature;
-  if (typeof topP === "number") cfg.topP = topP;
-  if (typeof topK === "number") cfg.topK = topK;
+  cfg.temperature = typeof temperature === "number" ? temperature : 1;
+  cfg.topP = typeof topP === "number" ? topP : 0.95;
+  cfg.topK = typeof topK === "number" ? topK : 64;
   if (Array.isArray(stopSequences)) cfg.stopSequences = stopSequences;
 
   return cfg;
@@ -39,6 +41,10 @@ function getSystemInstruction(body: any) {
   const sys = String(body?.systemInstruction ?? "").trim();
   if (!sys) return null;
   return { parts: [{ text: sys }] };
+}
+
+function supportsSystemInstruction(model: string) {
+  return !model.startsWith("gemma-3");
 }
 
 
@@ -67,7 +73,7 @@ export default {
       const message = String(body?.message ?? "").trim();
       if (!message) return json({ error: "Message is required" }, 400);
 
-      const model = String(body?.model ?? "gemma-3-1b-it").trim();
+      const model = String(body?.model ?? DEFAULT_MODEL).trim();
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
         model
       )}:generateContent`;
@@ -79,7 +85,9 @@ export default {
         contents: [{ role: "user", parts: [{ text: message }] }],
         generationConfig,
       };
-      if (systemInstruction) payload.systemInstruction = systemInstruction;
+      if (systemInstruction && supportsSystemInstruction(model)) {
+        payload.systemInstruction = systemInstruction;
+      }
 
       const upstream = await fetch(endpoint, {
         method: "POST",
