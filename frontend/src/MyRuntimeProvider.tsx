@@ -30,15 +30,15 @@ const LENGTH_CONFIG: Record<
     instruction: "Answer briefly in two to three sentences.",
   },
   3: {
-    maxOutputTokens: 256,
+    maxOutputTokens: 350,
     instruction: "Answer in one concise paragraph.",
   },
   4: {
-    maxOutputTokens: 512,
+    maxOutputTokens: 1024,
     instruction: "Answer with detail using multiple short paragraphs.",
   },
   5: {
-    maxOutputTokens: 1024,
+    maxOutputTokens: 4096,
     instruction: "Answer comprehensively with clear structure and examples when useful.",
   },
 };
