@@ -8,7 +8,11 @@ import { ToolFallback } from "@/components/tool-fallback";
 import { TooltipIconButton } from "@/components/tooltip-icon-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useGenerationSettings, type LengthLevel } from "@/MyRuntimeProvider";
+import {
+  useGenerationSettings,
+  type LengthLevel,
+  type TemperatureLevel,
+} from "@/MyRuntimeProvider";
 import {
   ActionBarMorePrimitive,
   ActionBarPrimitive,
@@ -33,11 +37,17 @@ import {
   RefreshCwIcon,
   SquareIcon,
   Settings2,
+  Thermometer,
+  ThermometerSnowflake,
+  ThermometerSun,
   AlignLeft,
   Minus,
   Menu,
   FileText,
   BookText,
+  Snowflake,
+  CircleSlash2,
+  Flame,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Slider from "@radix-ui/react-slider";
@@ -202,6 +212,77 @@ export const SettingsMenu = () => {
   </DropdownMenu.Root>);
 };
 
+export const TemperatureMenu = () => {
+  const { temperatureLevel, setTemperatureLevel } = useGenerationSettings();
+  const icons = [Snowflake, CircleSlash2, Flame];
+
+  const setLevel = (value: number) => {
+    const clamped = Math.max(1, Math.min(3, Math.round(value))) as TemperatureLevel;
+    setTemperatureLevel(clamped);
+  };
+
+  const TriggerIcon =
+    temperatureLevel === 1
+      ? ThermometerSnowflake
+      : temperatureLevel === 3
+        ? ThermometerSun
+        : Thermometer;
+
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <button
+          type="button"
+          className="inline-flex items-center justify-center rounded-md p-2 hover:bg-accent"
+          aria-label="Open temperature settings"
+        >
+          <TriggerIcon size={16} strokeWidth={1.25} />
+        </button>
+      </DropdownMenu.Trigger>
+
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          side="top"
+          align="start"
+          className="rounded-md border-0 bg-white p-2 shadow-none"
+        >
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between text-muted-foreground">
+              {icons.map((Icon, i) => {
+                const v = i + 1;
+                return (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setLevel(v)}
+                    className="p-1"
+                    aria-label={`Set temperature ${v}`}
+                  >
+                    <Icon className={cn("size-4", temperatureLevel === v && "text-blue-600")} />
+                  </button>
+                );
+              })}
+            </div>
+            <Slider.Root
+              value={[temperatureLevel]}
+              onValueChange={([v]: number[]) => setLevel(v)}
+              min={1}
+              max={3}
+              step={1}
+              className="relative flex w-32 items-center"
+            >
+              <Slider.Track className="relative h-1 w-full rounded-full bg-muted">
+                <Slider.Range className="absolute h-full rounded-full bg-blue-600" />
+              </Slider.Track>
+              <Slider.Thumb className="block size-4 rounded-full bg-blue-600 ring-2 ring-background" />
+            </Slider.Root>
+          </div>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  );
+};
+
 const Composer: FC = () => {
   return (
     <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
@@ -226,6 +307,7 @@ const ComposerAction: FC = () => {
       <div className="flex items-center gap-2">
         <ComposerAddAttachment />
         <SettingsMenu />
+        <TemperatureMenu />
       </div>
       <AuiIf condition={({ thread }) => !thread.isRunning}>
         <ComposerPrimitive.Send asChild>

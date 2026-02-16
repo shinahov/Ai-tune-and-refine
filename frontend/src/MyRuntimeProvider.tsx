@@ -15,6 +15,7 @@ const WORKER_URL = "https://ai-chat.ibshi100.workers.dev";
 const MODEL = "gemma-3-27b-it";
 
 export type LengthLevel = 1 | 2 | 3 | 4 | 5;
+export type TemperatureLevel = 1 | 2 | 3;
 
 const LENGTH_CONFIG: Record<
   LengthLevel,
@@ -45,6 +46,8 @@ const LENGTH_CONFIG: Record<
 type GenerationSettingsValue = {
   outputLengthLevel: LengthLevel;
   setOutputLengthLevel: (value: LengthLevel) => void;
+  temperatureLevel: TemperatureLevel;
+  setTemperatureLevel: (value: TemperatureLevel) => void;
 };
 
 const GenerationSettingsContext = createContext<GenerationSettingsValue | null>(null);
@@ -61,9 +64,16 @@ function toPrompt(text: string, instruction: string) {
   return `${instruction}\n\nUser message:\n${text}`;
 }
 
+const TEMPERATURE_CONFIG: Record<TemperatureLevel, number> = {
+  1: 0.1,
+  2: 1.0,
+  3: 1.8,
+};
+
 export function MyRuntimeProvider({ children }:
   { children: ReactNode }) {
   const [outputLengthLevel, setOutputLengthLevel] = useState<LengthLevel>(3);
+  const [temperatureLevel, setTemperatureLevel] = useState<TemperatureLevel>(2);
 
   const adapter = useMemo<ChatModelAdapter>(() => ({
     async run({ messages, abortSignal }) {
@@ -80,13 +90,14 @@ export function MyRuntimeProvider({ children }:
             : "";
 
       const levelConfig = LENGTH_CONFIG[outputLengthLevel];
+      const temperature = TEMPERATURE_CONFIG[temperatureLevel];
 
       const body: any = {
         message: toPrompt(text, levelConfig.instruction),
         model: MODEL,
         generationConfig: {
           maxOutputTokens: levelConfig.maxOutputTokens,
-          temperature: 0.2,
+          temperature,
           topP: 0.95,
           topK: 64,
         },
@@ -118,12 +129,19 @@ export function MyRuntimeProvider({ children }:
         content: [{ type: "text", text: String(data.text ?? "") }],
       };
     },
-  }), [outputLengthLevel]);
+  }), [outputLengthLevel, temperatureLevel]);
 
   const runtime = useLocalRuntime(adapter);
 
   return (
-    <GenerationSettingsContext.Provider value={{ outputLengthLevel, setOutputLengthLevel }}>
+    <GenerationSettingsContext.Provider
+      value={{
+        outputLengthLevel,
+        setOutputLengthLevel,
+        temperatureLevel,
+        setTemperatureLevel,
+      }}
+    >
       <AssistantRuntimeProvider runtime={runtime}>{children}</AssistantRuntimeProvider>
     </GenerationSettingsContext.Provider>
   );
