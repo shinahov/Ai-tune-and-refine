@@ -51,7 +51,7 @@ import {
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Slider from "@radix-ui/react-slider";
-import { type FC } from "react";
+import { useEffect, useState, type FC } from "react";
 
 export const Thread: FC = () => {
   return (
@@ -82,7 +82,104 @@ export const Thread: FC = () => {
           <Composer />
         </ThreadPrimitive.ViewportFooter>
       </ThreadPrimitive.Viewport>
+      <SelectionExplainBubble />
     </ThreadPrimitive.Root>
+  );
+};
+
+const SelectionExplainBubble: FC = () => {
+  const [selection, setSelection] = useState<{
+    visible: boolean;
+    left: number;
+    top: number;
+    text: string;
+  }>({
+    visible: false,
+    left: 0,
+    top: 0,
+    text: "",
+  });
+
+  useEffect(() => {
+    const hide = () => {
+      setSelection((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+    };
+
+    const updateFromSelection = () => {
+      const selected = window.getSelection();
+      if (!selected || selected.rangeCount === 0 || selected.isCollapsed) {
+        hide();
+        return;
+      }
+
+      const text = selected.toString().trim();
+      if (!text || /\s/.test(text)) {
+        hide();
+        return;
+      }
+
+      const range = selected.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) {
+        hide();
+        return;
+      }
+
+      setSelection({
+        visible: true,
+        left: rect.left + rect.width / 2,
+        top: Math.max(8, rect.top - 38),
+        text,
+      });
+    };
+
+    const onMouseDown = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest(".aui-explain-selection-bubble")) return;
+      hide();
+    };
+
+    document.addEventListener("selectionchange", updateFromSelection);
+    document.addEventListener("mouseup", updateFromSelection);
+    document.addEventListener("keyup", updateFromSelection);
+    document.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("scroll", updateFromSelection, true);
+    window.addEventListener("resize", updateFromSelection);
+
+    return () => {
+      document.removeEventListener("selectionchange", updateFromSelection);
+      document.removeEventListener("mouseup", updateFromSelection);
+      document.removeEventListener("keyup", updateFromSelection);
+      document.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("scroll", updateFromSelection, true);
+      window.removeEventListener("resize", updateFromSelection);
+    };
+  }, []);
+
+  const onExplain = () => {
+    window.dispatchEvent(
+      new CustomEvent("aui-explain-selection", { detail: { text: selection.text } }),
+    );
+    window.getSelection()?.removeAllRanges();
+    setSelection((prev) => ({ ...prev, visible: false }));
+  };
+
+  if (!selection.visible) return null;
+
+  return (
+    <div
+      className="aui-explain-selection-bubble fixed z-50 -translate-x-1/2"
+      style={{ left: selection.left, top: selection.top }}
+    >
+      <button
+        type="button"
+        onClick={onExplain}
+        className="rounded-md border bg-background px-2.5 py-1 text-xs shadow-sm hover:bg-accent"
+        aria-label="Explain selected word"
+      >
+        Explain
+      </button>
+    </div>
   );
 };
 
