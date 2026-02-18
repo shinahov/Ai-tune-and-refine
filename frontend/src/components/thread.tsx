@@ -51,7 +51,7 @@ import {
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Slider from "@radix-ui/react-slider";
-import { useEffect, useState, type FC } from "react";
+import { useEffect, useRef, useState, type FC } from "react";
 
 export const Thread: FC = () => {
   return (
@@ -88,6 +88,7 @@ export const Thread: FC = () => {
 };
 
 const SelectionExplainBubble: FC = () => {
+  const selectedRangeRef = useRef<Range | null>(null);
   const [selection, setSelection] = useState<{
     visible: boolean;
     left: number;
@@ -125,6 +126,8 @@ const SelectionExplainBubble: FC = () => {
         return;
       }
 
+      selectedRangeRef.current = range.cloneRange();
+
       setSelection({
         visible: true,
         left: rect.left + rect.width / 2,
@@ -139,11 +142,22 @@ const SelectionExplainBubble: FC = () => {
       hide();
     };
 
+    const onExplainTargetClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      const highlight = target?.closest('[data-explain-highlight="true"]') as HTMLElement | null;
+      if (!highlight) return;
+
+      const explanation = highlight.nextElementSibling as HTMLElement | null;
+      if (!explanation || explanation.dataset.explainText !== "true") return;
+      explanation.style.display = "inline";
+    };
+
     document.addEventListener("mouseup", updateFromSelection);
     document.addEventListener("touchend", updateFromSelection);
     document.addEventListener("keyup", updateFromSelection);
     document.addEventListener("mousedown", onMouseDown);
     document.addEventListener("touchstart", onMouseDown as EventListener);
+    document.addEventListener("click", onExplainTargetClick);
     window.addEventListener("scroll", updateFromSelection, true);
     window.addEventListener("resize", updateFromSelection);
 
@@ -153,16 +167,43 @@ const SelectionExplainBubble: FC = () => {
       document.removeEventListener("keyup", updateFromSelection);
       document.removeEventListener("mousedown", onMouseDown);
       document.removeEventListener("touchstart", onMouseDown as EventListener);
+      document.removeEventListener("click", onExplainTargetClick);
       window.removeEventListener("scroll", updateFromSelection, true);
       window.removeEventListener("resize", updateFromSelection);
     };
   }, []);
 
   const onExplain = () => {
-    window.dispatchEvent(
-      new CustomEvent("aui-explain-selection", { detail: { text: selection.text } }),
-    );
+    const range = selectedRangeRef.current;
+    if (!range || range.collapsed) return;
+
+    const highlight = document.createElement("span");
+    highlight.dataset.explainHighlight = "true";
+    highlight.style.display = "inline";
+    highlight.style.borderRadius = "9999px";
+    highlight.style.background = "#111827";
+    highlight.style.color = "#9ca3af";
+    highlight.style.padding = "0.08rem 0.4rem";
+    highlight.style.cursor = "pointer";
+
+    const explanation = document.createElement("span");
+    explanation.dataset.explainText = "true";
+    explanation.textContent = " text explanation";
+    explanation.style.display = "none";
+    explanation.style.color = "#6b7280";
+    explanation.style.marginLeft = "0.35rem";
+
+    try {
+      const extracted = range.extractContents();
+      highlight.appendChild(extracted);
+      range.insertNode(highlight);
+      highlight.insertAdjacentElement("afterend", explanation);
+    } catch {
+      return;
+    }
+
     window.getSelection()?.removeAllRanges();
+    selectedRangeRef.current = null;
     setSelection((prev) => ({ ...prev, visible: false }));
   };
 
@@ -613,3 +654,4 @@ const BranchPicker: FC<BranchPickerPrimitive.Root.Props> = ({
     </BranchPickerPrimitive.Root>
   );
 };
+
