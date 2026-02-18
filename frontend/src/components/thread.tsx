@@ -89,16 +89,19 @@ export const Thread: FC = () => {
 
 const SelectionExplainBubble: FC = () => {
   const selectedRangeRef = useRef<Range | null>(null);
+  const insertTargetRef = useRef<HTMLElement | null>(null);
   const [selection, setSelection] = useState<{
     visible: boolean;
     left: number;
     top: number;
     text: string;
+    action: "explain" | "insert";
   }>({
     visible: false,
     left: 0,
     top: 0,
     text: "",
+    action: "explain",
   });
 
   useEffect(() => {
@@ -133,6 +136,7 @@ const SelectionExplainBubble: FC = () => {
         left: rect.left + rect.width / 2,
         top: Math.max(8, rect.top - 38),
         text,
+        action: "explain",
       });
     };
 
@@ -152,12 +156,29 @@ const SelectionExplainBubble: FC = () => {
       explanation.style.display = "inline";
     };
 
+    const onExplanationClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      const explanation = target?.closest('[data-explain-text="true"]') as HTMLElement | null;
+      if (!explanation) return;
+
+      const rect = explanation.getBoundingClientRect();
+      insertTargetRef.current = explanation;
+      setSelection({
+        visible: true,
+        left: rect.left + rect.width / 2,
+        top: Math.max(8, rect.top - 38),
+        text: explanation.textContent ?? "",
+        action: "insert",
+      });
+    };
+
     document.addEventListener("mouseup", updateFromSelection);
     document.addEventListener("touchend", updateFromSelection);
     document.addEventListener("keyup", updateFromSelection);
     document.addEventListener("mousedown", onMouseDown);
     document.addEventListener("touchstart", onMouseDown as EventListener);
     document.addEventListener("click", onExplainTargetClick);
+    document.addEventListener("click", onExplanationClick);
     window.addEventListener("scroll", updateFromSelection, true);
     window.addEventListener("resize", updateFromSelection);
 
@@ -168,12 +189,27 @@ const SelectionExplainBubble: FC = () => {
       document.removeEventListener("mousedown", onMouseDown);
       document.removeEventListener("touchstart", onMouseDown as EventListener);
       document.removeEventListener("click", onExplainTargetClick);
+      document.removeEventListener("click", onExplanationClick);
       window.removeEventListener("scroll", updateFromSelection, true);
       window.removeEventListener("resize", updateFromSelection);
     };
   }, []);
 
   const onExplain = () => {
+    if (selection.action === "insert") {
+      const target = insertTargetRef.current;
+      if (!target) return;
+
+      const inserted = document.createElement("span");
+      inserted.textContent = " inserted explanation";
+      inserted.style.color = "#4b5563";
+      inserted.style.marginLeft = "0.35rem";
+      target.insertAdjacentElement("afterend", inserted);
+      insertTargetRef.current = null;
+      setSelection((prev) => ({ ...prev, visible: false }));
+      return;
+    }
+
     const range = selectedRangeRef.current;
     if (!range || range.collapsed) return;
 
@@ -192,6 +228,8 @@ const SelectionExplainBubble: FC = () => {
     explanation.style.display = "none";
     explanation.style.color = "#6b7280";
     explanation.style.marginLeft = "0.35rem";
+    explanation.style.cursor = "pointer";
+    explanation.style.textDecoration = "underline";
 
     try {
       const extracted = range.extractContents();
@@ -220,7 +258,7 @@ const SelectionExplainBubble: FC = () => {
         className="rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs text-zinc-100 shadow-sm hover:bg-zinc-800"
         aria-label="Explain selected word"
       >
-        Explain
+        {selection.action === "insert" ? "Insert explanation" : "Explain"}
       </button>
     </div>
   );
