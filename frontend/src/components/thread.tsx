@@ -113,7 +113,7 @@ const SelectionExplainBubble: FC = () => {
       }
 
       const text = selected.toString().trim();
-      if (!text || /\s/.test(text)) {
+      if (!text) {
         hide();
         return;
       }
@@ -139,18 +139,20 @@ const SelectionExplainBubble: FC = () => {
       hide();
     };
 
-    document.addEventListener("selectionchange", updateFromSelection);
     document.addEventListener("mouseup", updateFromSelection);
+    document.addEventListener("touchend", updateFromSelection);
     document.addEventListener("keyup", updateFromSelection);
     document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("touchstart", onMouseDown as EventListener);
     window.addEventListener("scroll", updateFromSelection, true);
     window.addEventListener("resize", updateFromSelection);
 
     return () => {
-      document.removeEventListener("selectionchange", updateFromSelection);
       document.removeEventListener("mouseup", updateFromSelection);
+      document.removeEventListener("touchend", updateFromSelection);
       document.removeEventListener("keyup", updateFromSelection);
       document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("touchstart", onMouseDown as EventListener);
       window.removeEventListener("scroll", updateFromSelection, true);
       window.removeEventListener("resize", updateFromSelection);
     };
@@ -174,7 +176,7 @@ const SelectionExplainBubble: FC = () => {
       <button
         type="button"
         onClick={onExplain}
-        className="rounded-md border bg-background px-2.5 py-1 text-xs shadow-sm hover:bg-accent"
+        className="rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs text-zinc-100 shadow-sm hover:bg-zinc-800"
         aria-label="Explain selected word"
       >
         Explain
