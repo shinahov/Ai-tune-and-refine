@@ -48,7 +48,25 @@ function supportsSystemInstruction(model: string) {
 }
 
 function buildExplainPrompt(text: string) {
-  return `Explain this selected text in simple words:\n\n"${text}"`;
+  return [
+    "Explain the selected text in simple, precise plain text.",
+    "Rules:",
+    "- Output plain text only (no markdown, no bullets, no headings).",
+    "- Keep it short: maximum 2 sentences.",
+    "- Focus on the exact selected text only.",
+    "",
+    `Selected text: "${text}"`,
+  ].join("\n");
+}
+
+function normalizePlainText(text: string) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/\*(.*?)\*/g, "$1")
+    .replace(/`(.*?)`/g, "$1")
+    .replace(/^[-*]\s+/gm, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 
@@ -146,8 +164,8 @@ export default {
       const payload: any = {
         contents: [{ role: "user", parts: [{ text: buildExplainPrompt(selectedText) }] }],
         generationConfig: {
-          maxOutputTokens: 256,
-          temperature: 0.2,
+          maxOutputTokens: 120,
+          temperature: 0.1,
           topP: 0.95,
           topK: 64,
         },
@@ -171,8 +189,9 @@ export default {
       }
 
       const data: any = await upstream.json();
-      const explanation =
+      const explanationRaw =
         data?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text).filter(Boolean).join("") ?? "";
+      const explanation = normalizePlainText(explanationRaw);
 
       return json({
         text: explanation,
