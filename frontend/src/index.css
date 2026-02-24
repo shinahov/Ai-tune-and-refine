@@ -74,15 +74,25 @@
   text-decoration: underline;
 }
 
-.aui-explain-loading {
-  display: inline-block;
+.aui-explain-highlight {
+  display: inline;
   border-radius: 9999px;
-  padding: 0.08rem 0.5rem;
+  background: #111827;
+  color: #9ca3af;
+  padding: 0.08rem 0.4rem;
+  cursor: pointer;
+}
+
+.aui-explain-highlight-loading {
+  display: inline-block;
   color: #0f172a;
-  text-decoration: none;
   background: linear-gradient(90deg, #1d4ed8, #60a5fa, #ffffff, #60a5fa, #1d4ed8);
   background-size: 260% 100%;
   animation: aui-explain-gradient 1.3s linear infinite;
+}
+
+.aui-explain-loading {
+  color: #0f172a;
 }
 
 @keyframes aui-explain-gradient {

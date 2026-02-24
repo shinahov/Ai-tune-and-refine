@@ -216,17 +216,12 @@ const SelectionExplainBubble: FC = () => {
 
     const highlight = document.createElement("span");
     highlight.dataset.explainHighlight = "true";
-    highlight.style.display = "inline";
-    highlight.style.borderRadius = "9999px";
-    highlight.style.background = "#111827";
-    highlight.style.color = "#9ca3af";
-    highlight.style.padding = "0.08rem 0.4rem";
-    highlight.style.cursor = "pointer";
+    highlight.className = "aui-explain-highlight aui-explain-highlight-loading";
 
     const explanation = document.createElement("span");
     explanation.dataset.explainText = "true";
-    explanation.textContent = " loading explanation...";
-    explanation.style.display = "inline";
+    explanation.textContent = "";
+    explanation.style.display = "none";
     explanation.className = "aui-explain-text aui-explain-loading";
 
     try {
@@ -251,11 +246,15 @@ const SelectionExplainBubble: FC = () => {
       .then((data) => {
         const text = String(data?.text ?? "").trim();
         explanation.textContent = text ? ` ${text}` : " text explanation";
+        explanation.style.display = "inline";
         explanation.classList.remove("aui-explain-loading");
+        highlight.classList.remove("aui-explain-highlight-loading");
       })
       .catch(() => {
         explanation.textContent = " explanation unavailable";
+        explanation.style.display = "inline";
         explanation.classList.remove("aui-explain-loading");
+        highlight.classList.remove("aui-explain-highlight-loading");
       });
 
     window.getSelection()?.removeAllRanges();
