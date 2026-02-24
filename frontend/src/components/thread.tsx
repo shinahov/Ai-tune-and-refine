@@ -52,6 +52,7 @@ import {
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Slider from "@radix-ui/react-slider";
 import { useEffect, useRef, useState, type FC } from "react";
+const WORKER_URL = "https://ai-chat.ibshi100.workers.dev";
 
 export const Thread: FC = () => {
   return (
@@ -224,12 +225,9 @@ const SelectionExplainBubble: FC = () => {
 
     const explanation = document.createElement("span");
     explanation.dataset.explainText = "true";
-    explanation.textContent = " text explanation";
-    explanation.style.display = "none";
-    explanation.style.color = "#6b7280";
-    explanation.style.marginLeft = "0.35rem";
-    explanation.style.cursor = "pointer";
-    explanation.style.textDecoration = "underline";
+    explanation.textContent = " loading explanation...";
+    explanation.style.display = "inline";
+    explanation.className = "aui-explain-text aui-explain-loading";
 
     try {
       const extracted = range.extractContents();
@@ -239,6 +237,26 @@ const SelectionExplainBubble: FC = () => {
     } catch {
       return;
     }
+
+    const selectedText = highlight.textContent?.trim() ?? "";
+    void fetch(`${WORKER_URL}/explain`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: selectedText }),
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Explain failed: ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        const text = String(data?.text ?? "").trim();
+        explanation.textContent = text ? ` ${text}` : " text explanation";
+        explanation.classList.remove("aui-explain-loading");
+      })
+      .catch(() => {
+        explanation.textContent = " explanation unavailable";
+        explanation.classList.remove("aui-explain-loading");
+      });
 
     window.getSelection()?.removeAllRanges();
     selectedRangeRef.current = null;

@@ -47,6 +47,10 @@ function supportsSystemInstruction(model: string) {
   return !model.startsWith("gemma-3");
 }
 
+function buildExplainPrompt(text: string) {
+  return `Explain this selected text in simple words:\n\n"${text}"`;
+}
+
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -121,6 +125,61 @@ export default {
       });
 
 
+    }
+
+    if (request.method === "POST" && url.pathname === "/explain") {
+      let body: any;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ error: "Invalid JSON" }, 400);
+      }
+
+      const selectedText = String(body?.text ?? "").trim();
+      if (!selectedText) return json({ error: "Text is required" }, 400);
+
+      const model = String(body?.model ?? DEFAULT_MODEL).trim();
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+        model
+      )}:generateContent`;
+
+      const payload: any = {
+        contents: [{ role: "user", parts: [{ text: buildExplainPrompt(selectedText) }] }],
+        generationConfig: {
+          maxOutputTokens: 256,
+          temperature: 0.2,
+          topP: 0.95,
+          topK: 64,
+        },
+      };
+
+      const upstream = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          "x-goog-api-key": env.GEMINI_API_KEY,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!upstream.ok) {
+        const errorText = await upstream.text();
+        return json(
+          { error: `Gemini API error: ${upstream.status} ${upstream.statusText}`, details: errorText },
+          502
+        );
+      }
+
+      const data: any = await upstream.json();
+      const explanation =
+        data?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text).filter(Boolean).join("") ?? "";
+
+      return json({
+        text: explanation,
+        model,
+        finishReason: data?.candidates?.[0]?.finishReason ?? null,
+        usage: data?.usageMetadata ?? null,
+      });
     }
 
     return new Response("Not Found", { status: 404, headers: CORS_HEADERS });

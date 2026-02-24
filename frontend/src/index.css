@@ -66,3 +66,30 @@
     @apply bg-background text-foreground;
   }
 }
+
+.aui-explain-text {
+  color: #6b7280;
+  margin-left: 0.35rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.aui-explain-loading {
+  display: inline-block;
+  border-radius: 9999px;
+  padding: 0.08rem 0.5rem;
+  color: #0f172a;
+  text-decoration: none;
+  background: linear-gradient(90deg, #1d4ed8, #60a5fa, #ffffff, #60a5fa, #1d4ed8);
+  background-size: 260% 100%;
+  animation: aui-explain-gradient 1.3s linear infinite;
+}
+
+@keyframes aui-explain-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
